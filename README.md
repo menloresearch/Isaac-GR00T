@@ -114,6 +114,13 @@ pip install -e .[base]
 pip install --no-build-isolation flash-attn==2.7.1.post4 
 ```
 
+### Use prebuild docker image
+
+```bash
+docker run --gpus all --privileged -it -v $(pwd):/isaac dsfhe49854/isaac-gr00t bash
+```
+
+
 ## Getting started with this repo
 
 We provide accessible Jupyter notebooks and detailed documentation in the [`./getting_started`](./getting_started) folder. Utility scripts can be found in the [`./scripts`](./scripts) folder. Additionally, a comprehensive tutorial for finetuning the model on the SO-101 robot is available on [HuggingFace](https://huggingface.co/blog/nvidia/gr00t-n1-5-so101-tuning).

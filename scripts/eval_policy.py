@@ -19,6 +19,7 @@ from typing import List, Literal
 
 import numpy as np
 import tyro
+from termcolor import colored
 
 from gr00t.data.dataset import LeRobotSingleDataset
 from gr00t.data.embodiment_tags import EMBODIMENT_TAG_MAPPING
@@ -104,7 +105,8 @@ def main(args: ArgsConfig):
 
     # Get the supported modalities for the policy
     modality = policy.get_modality_config()
-    print("Current modality config: \n", modality)
+    print(colored('modality: ', color='green'))
+    print(modality)
 
     # Create the dataset
     dataset = LeRobotSingleDataset(
@@ -116,6 +118,7 @@ def main(args: ArgsConfig):
         embodiment_tag=args.embodiment_tag,
     )
 
+    print(colored('len(dataset): ', color='green'))
     print(len(dataset))
     # Make a prediction
     obs = dataset[0]
@@ -131,9 +134,9 @@ def main(args: ArgsConfig):
         else:
             print(k, v)
 
-    print("Total trajectories:", len(dataset.trajectory_lengths))
-    print("All trajectories:", dataset.trajectory_lengths)
-    print("Running on all trajs with modality keys:", args.modality_keys)
+    print(colored("Total trajectories:", color='green'), len(dataset.trajectory_lengths))
+    print(colored("All trajectories:", color='green'), dataset.trajectory_lengths)
+    print(colored("Running on all trajs with modality keys:", color='green'), args.modality_keys)
 
     all_mse = []
     for traj_id in range(args.trajs):
