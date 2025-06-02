@@ -17,6 +17,7 @@ import argparse
 import warnings
 
 import numpy as np
+from termcolor import colored
 
 from gr00t.data.dataset import LeRobotSingleDataset
 from gr00t.eval.robot import RobotInferenceClient
@@ -103,6 +104,7 @@ if __name__ == "__main__":
 
     # Get the supported modalities for the policy
     modality = policy.get_modality_config()
+    print(colored('modality: ', color='green'))
     print(modality)
 
     # Create the dataset
@@ -115,6 +117,7 @@ if __name__ == "__main__":
         embodiment_tag=args.embodiment_tag,
     )
 
+    print(colored('len(dataset): ', color='green'))
     print(len(dataset))
     # Make a prediction
     obs = dataset[0]
@@ -130,9 +133,9 @@ if __name__ == "__main__":
         else:
             print(k, v)
 
-    print("Total trajectories:", len(dataset.trajectory_lengths))
-    print("All trajectories:", dataset.trajectory_lengths)
-    print("Running on all trajs with modality keys:", args.modality_keys)
+    print(colored("Total trajectories:", color='green'), len(dataset.trajectory_lengths))
+    print(colored("All trajectories:", color='green'), dataset.trajectory_lengths)
+    print(colored("Running on all trajs with modality keys:", color='green'), args.modality_keys)
 
     all_mse = []
     for traj_id in range(args.trajs):

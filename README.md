@@ -87,6 +87,12 @@ pip install -e .
 pip install --no-build-isolation flash-attn==2.7.1.post4 
 ```
 
+### Use prebuild docker image
+
+```bash
+docker run --gpus all --privileged -it -v $(pwd):/isaac dsfhe49854/isaac-gr00t bash
+```
+
 
 ## Getting started with this repo
 
