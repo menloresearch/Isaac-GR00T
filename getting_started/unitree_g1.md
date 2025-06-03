@@ -133,6 +133,13 @@ Assuming a 10 Hz inference frequency, 160 steps correspond to 1 seconds of actio
 
 ---
 
+### Data Collection
+
+* https://github.com/unitreerobotics/avp_teleoperate
+* https://github.com/unitreerobotics/unitree_IL_lerobot
+
+---
+
 ### Finetune
 
 
