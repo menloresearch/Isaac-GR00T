@@ -48,6 +48,9 @@ class Config:
     # Training parameters
     batch_size: int = 16
     """Batch size per GPU for training."""
+    
+    grad_accum_steps: int = 1
+    """gradient_accumulation_steps for training."""
 
     max_steps: int = 10000
     """Maximum number of training steps."""
@@ -65,13 +68,13 @@ class Config:
     tune_llm: bool = False
     """Whether to fine-tune the language model backbone."""
 
-    tune_visual: bool = True
+    tune_visual: bool = False
     """Whether to fine-tune the vision tower."""
 
     tune_projector: bool = True
     """Whether to fine-tune the projector."""
 
-    tune_diffusion_model: bool = True
+    tune_diffusion_model: bool = False
     """Whether to fine-tune the diffusion model."""
 
     resume: bool = False
@@ -106,7 +109,7 @@ class Config:
     embodiment_tag: str = "new_embodiment"
     """Embodiment tag to use for training. e.g. 'new_embodiment', 'gr1'"""
 
-    video_backend: str = "decord"
+    video_backend: str = "torchvision_av"
     """Video backend to use for training. [decord, torchvision_av]"""
 
 
@@ -165,7 +168,7 @@ def main(config: Config):
         bf16=True,
         tf32=True,
         per_device_train_batch_size=config.batch_size,
-        gradient_accumulation_steps=1,
+        gradient_accumulation_steps=config.grad_accum_steps,
         dataloader_num_workers=config.dataloader_num_workers,
         dataloader_pin_memory=False,
         dataloader_persistent_workers=True,
