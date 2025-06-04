@@ -50,6 +50,9 @@ class ArgsConfig:
     # Training parameters
     batch_size: int = 32
     """Batch size per GPU for training."""
+    
+    grad_accum_steps: int = 1
+    """gradient_accumulation_steps for training."""
 
     max_steps: int = 10000
     """Maximum number of training steps."""
@@ -73,7 +76,7 @@ class ArgsConfig:
     tune_projector: bool = True
     """Whether to fine-tune the projector."""
 
-    tune_diffusion_model: bool = True
+    tune_diffusion_model: bool = False
     """Whether to fine-tune the diffusion model."""
 
     resume: bool = False
@@ -209,7 +212,7 @@ def main(config: ArgsConfig):
         bf16=True,
         tf32=True,
         per_device_train_batch_size=config.batch_size,
-        gradient_accumulation_steps=1,
+        gradient_accumulation_steps=config.grad_accum_steps,
         dataloader_num_workers=config.dataloader_num_workers,
         dataloader_pin_memory=False,
         dataloader_persistent_workers=config.dataloader_num_workers > 0,

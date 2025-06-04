@@ -142,6 +142,31 @@ Assuming a 10 Hz inference frequency, 160 steps correspond to 1 seconds of actio
 
 ### Finetune
 
+**WIP**
+
+> [!NOTE]
+> The modality metadata provided by the nvidia don't match the `unitreerobotics/G1_BlockStacking_Dataset` data.
+> ex: there is no "human.task_description" in the dataset
+
+`getting_started/examples/unitree_g1_blocks_v2__modality.json`
+
+
+CLI commands for debug finetuen process:
+
+```
+huggingface-cli download unitreerobotics/G1_BlockStacking_Dataset \
+  --repo-type dataset \
+  --local-dir ./gr00t_dataset/G1_BlockStacking_Dataset
+
+cp getting_started/examples/unitree_g1_blocks_v2__modality.json ./gr00t_dataset/G1_BlockStacking_Dataset/meta
+
+python3 scripts/gr00t_finetune.py \
+  --dataset-path ./gr00t_dataset/G1_BlockStacking_Dataset/ \
+  --num-gpus 1 \
+  --data_config g1_stack_block \
+  --batch-size 1 \
+  --grad_accum_steps 8
+```
 
 ---
 

@@ -1,0 +1,76 @@
+{
+    "state": {
+        "left_shoulder": {
+            "start": 0,
+            "end": 3
+        },
+        "left_elbow": {
+            "start": 3,
+            "end": 4
+        },
+        "left_wrist": {
+            "start": 4,
+            "end": 7
+        },
+        "right_shoulder": {
+            "start": 7,
+            "end": 10
+        },
+        "right_elbow": {
+            "start": 10,
+            "end": 11
+        },
+        "right_wrist": {
+            "start": 11,
+            "end": 14
+        },
+        "left_hand": {
+            "start": 14,
+            "end": 21
+        },
+        "right_hand": {
+            "start": 21,
+            "end": 28
+        }
+    },
+    "action": {
+        "left_shoulder": {
+            "start": 0,
+            "end": 3
+        },
+        "left_elbow": {
+            "start": 3,
+            "end": 4
+        },
+        "left_wrist": {
+            "start": 4,
+            "end": 7
+        },
+        "right_shoulder": {
+            "start": 7,
+            "end": 10
+        },
+        "right_elbow": {
+            "start": 10,
+            "end": 11
+        },
+        "right_wrist": {
+            "start": 11,
+            "end": 14
+        },
+        "left_hand": {
+            "start": 14,
+            "end": 21
+        },
+        "right_hand": {
+            "start": 21,
+            "end": 28
+        }
+    },
+    "video": {
+        "ego_view": {
+            "original_key": "observation.images.cam_left_high"
+        }
+    },
+    "annotation": {}
+}

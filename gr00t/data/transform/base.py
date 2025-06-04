@@ -132,3 +132,13 @@ class ComposedModalityTransform(ModalityTransform):
     def eval(self):
         for transform in self.transforms:
             transform.eval()
+
+
+class InsertFixValue(ModalityTransform):
+
+    key: str =  Field()
+    anno_str: Any =  Field()
+
+    def apply(self, data: dict[str, Any]) -> dict[str, Any]:
+        data[self.key] = self.anno_str
+        return data
