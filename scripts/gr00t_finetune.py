@@ -112,6 +112,9 @@ class Config:
     video_backend: str = "torchvision_av"
     """Video backend to use for training. [decord, torchvision_av]"""
 
+    train_episode: int | None = None
+    """Number of episodes will be use in the training, will take the first `train_episode` from the dataset"""
+
 
 #####################################################################################
 # main training function
@@ -127,6 +130,7 @@ def main(config: Config):
     data_config_cls = DATA_CONFIG_MAP[config.data_config]
     modality_configs = data_config_cls.modality_config()
     transforms = data_config_cls.transform()
+    episode_slice = slice(config.train_episode) if config.train_episode else None
 
     # 1.2 data loader
     train_dataset = LeRobotSingleDataset(
@@ -135,6 +139,7 @@ def main(config: Config):
         transforms=transforms,
         embodiment_tag=embodiment_tag,  # This will override the dataset's embodiment tag to "new_embodiment"
         video_backend=config.video_backend,
+        episode_slice=episode_slice,
     )
 
     # ------------ step 2: load model ------------

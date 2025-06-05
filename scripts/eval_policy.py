@@ -16,6 +16,7 @@
 import argparse
 import warnings
 
+from networkx import descendants
 import numpy as np
 from termcolor import colored
 
@@ -60,6 +61,7 @@ if __name__ == "__main__":
     parser.add_argument("--action_horizon", type=int, default=16)
     parser.add_argument("--video_backend", type=str, default="torchvision_av")
     parser.add_argument("--dataset_path", type=str, default="demo_data/robot_sim.PickNPlace/")
+    parser.add_argument("--eval_episode_slice", type=int, default=None, help="number of episodes will be used, will only use last `eval_episode_slice` episodes during eval")
     parser.add_argument(
         "--embodiment_tag",
         type=str,
@@ -106,6 +108,7 @@ if __name__ == "__main__":
     modality = policy.get_modality_config()
     print(colored('modality: ', color='green'))
     print(modality)
+    episode_slice = slice(-args.eval_episode_slice, 10**20) if args.eval_episode_slice else None
 
     # Create the dataset
     dataset = LeRobotSingleDataset(
@@ -115,6 +118,7 @@ if __name__ == "__main__":
         video_backend_kwargs=None,
         transforms=None,  # We'll handle transforms separately through the policy
         embodiment_tag=args.embodiment_tag,
+        episode_slice=episode_slice,
     )
 
     print(colored('len(dataset): ', color='green'))
@@ -127,7 +131,8 @@ if __name__ == "__main__":
         else:
             print(k, v)
 
-    for k, v in dataset.get_step_data(0, 0).items():
+    trajs = dataset.trajectory_ids
+    for k, v in dataset.get_step_data(trajs[0], 0).items():
         if isinstance(v, np.ndarray):
             print(k, v.shape)
         else:
@@ -138,8 +143,8 @@ if __name__ == "__main__":
     print(colored("Running on all trajs with modality keys:", color='green'), args.modality_keys)
 
     all_mse = []
-    for traj_id in range(args.trajs):
-        print("Running trajectory:", traj_id)
+    for traj_id in trajs[:args.trajs]:
+        print(colored("Running trajectory:", color='blue'), traj_id)
         mse = calc_mse_for_single_trajectory(
             policy,
             dataset,
@@ -149,7 +154,7 @@ if __name__ == "__main__":
             action_horizon=args.action_horizon,
             plot=args.plot,
         )
-        print("MSE:", mse)
+        print(colored("MSE:", color='blue'), mse)
         all_mse.append(mse)
     print("Average MSE across all trajs:", np.mean(all_mse))
     print("Done")
