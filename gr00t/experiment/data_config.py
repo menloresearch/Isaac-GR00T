@@ -23,7 +23,10 @@ from gr00t.data.transform.state_action import (
     StateActionToTensor,
     StateActionTransform,
 )
-from gr00t.data.transform.base import InsertFixValue
+from gr00t.data.transform.base import (
+    InsertFixValue,
+    InsertValFromSet,
+)
 from gr00t.data.transform.video import (
     VideoColorJitter,
     VideoCrop,
@@ -69,16 +72,26 @@ class G1StackBlocksDataConfig(BaseDataConfig):
         "action.left_hand",
         "action.right_hand",
     ]
-    language_keys = ["annotation.human.action.task_description"]
     """
     HACK: The G1 block stacking dataset don't come with language instruction label.
         But since all the episodes perform the same task in the same way, 
         we can just write and insert one ourself here.
     """
-    instruction = (
-        "Put the red block at the bottom, then stack yellow block on top of red block, "
-        "finally stack the green block on top of yellow block."
-    )
+    language_keys = ["annotation.human.action.task_description"]
+    instruction_list = [
+        ("Put the red block at the bottom, then stack yellow block on top of red block, "
+         "finally stack the green block on top of yellow block."),
+        "Stack the red, yellow, and green blocks in that order, starting with red at the bottom.",
+        "Make a tower with the red block first, then the yellow one, and finally the green on top.",
+        "Place the blocks so red is at the bottom, yellow goes above it, and green is on top.",
+        "Start by placing the red block down, then build up with yellow and green.",
+        "Arrange the red, yellow, and green blocks vertically, red at the base.",
+        "Stack the three blocks with red on the bottom, followed by yellow and green.",
+        "Build a stack starting with the red block, then yellow, and top it with green.",
+        "Put the red block down first, place yellow over it, and green on the very top.",
+        "Create a stack where the red block is the base, yellow is in the middle, and green is on top.",
+        "Position the blocks in a tower: red at the bottom, yellow in between, and green on top.",
+    ]
     observation_indices = [0]
     action_indices = list(range(16))
 
@@ -98,16 +111,10 @@ class G1StackBlocksDataConfig(BaseDataConfig):
             modality_keys=self.action_keys,
         )
 
-        # language_modality = ModalityConfig(
-        #     delta_indices=self.observation_indices,
-        #     modality_keys=self.language_keys,
-        # )
-
         modality_configs = {
             "video": video_modality,
             "state": state_modality,
             "action": action_modality,
-            # "language": language_modality,
         }
 
         return modality_configs
@@ -141,11 +148,16 @@ class G1StackBlocksDataConfig(BaseDataConfig):
                 state_concat_order=self.state_keys,
                 action_concat_order=self.action_keys,
             ),
-            InsertFixValue(
+            InsertValFromSet(
                 key=self.language_keys[0], 
-                anno_str=[self.instruction], 
+                anno_list=[[ins] for ins in self.instruction_list],
                 apply_to=[]
             ),
+            # InsertFixValue(
+            #     key=self.language_keys[0], 
+            #     anno_str=[self.instruction], 
+            #     apply_to=[]
+            # ),
             # model-specific transform
             GR00TTransform(
                 state_horizon=len(self.observation_indices),
