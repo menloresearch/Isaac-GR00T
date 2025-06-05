@@ -109,6 +109,7 @@ class LeRobotSingleDataset(Dataset):
         video_backend: str = "decord",
         video_backend_kwargs: dict | None = None,
         transforms: ComposedModalityTransform | None = None,
+        episode_slice: slice | None = None,
     ):
         """
         Initialize the dataset.
@@ -140,6 +141,7 @@ class LeRobotSingleDataset(Dataset):
         else:
             self.tag = embodiment_tag
 
+        self._episode_slice = episode_slice
         self._metadata = self._get_metadata(EmbodimentTag(self.tag))
         self._trajectory_ids, self._trajectory_lengths = self._get_trajectories()
         self._all_steps = self._get_all_steps()
@@ -371,6 +373,11 @@ class LeRobotSingleDataset(Dataset):
         for episode in episode_metadata:
             trajectory_ids.append(episode["episode_index"])
             trajectory_lengths.append(episode["length"])
+        
+        if self._episode_slice:
+            trajectory_ids = trajectory_ids[self._episode_slice]
+            trajectory_lengths = trajectory_lengths[self._episode_slice]
+
         return np.array(trajectory_ids), np.array(trajectory_lengths)
 
     def _get_all_steps(self) -> list[tuple[int, int]]:

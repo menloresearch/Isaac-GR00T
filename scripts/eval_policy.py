@@ -17,6 +17,7 @@ import warnings
 from dataclasses import dataclass, field
 from typing import List, Literal
 
+from networkx import descendants
 import numpy as np
 import tyro
 from termcolor import colored
@@ -83,6 +84,9 @@ class ArgsConfig:
     denoising_steps: int = 4
     """Number of denoising steps to use."""
 
+    eval_episode_slice: int = None
+    """number of episodes will be used, will only use last `eval_episode_slice` episodes during eval"""
+
 
 def main(args: ArgsConfig):
     data_config = DATA_CONFIG_MAP[args.data_config]
@@ -107,6 +111,7 @@ def main(args: ArgsConfig):
     modality = policy.get_modality_config()
     print(colored('modality: ', color='green'))
     print(modality)
+    episode_slice = slice(-args.eval_episode_slice, 10**20) if args.eval_episode_slice else None
 
     # Create the dataset
     dataset = LeRobotSingleDataset(
@@ -116,6 +121,7 @@ def main(args: ArgsConfig):
         video_backend_kwargs=None,
         transforms=None,  # We'll handle transforms separately through the policy
         embodiment_tag=args.embodiment_tag,
+        episode_slice=episode_slice,
     )
 
     print(colored('len(dataset): ', color='green'))
@@ -128,7 +134,8 @@ def main(args: ArgsConfig):
         else:
             print(k, v)
 
-    for k, v in dataset.get_step_data(0, 0).items():
+    trajs = dataset.trajectory_ids
+    for k, v in dataset.get_step_data(trajs[0], 0).items():
         if isinstance(v, np.ndarray):
             print(k, v.shape)
         else:
@@ -139,8 +146,8 @@ def main(args: ArgsConfig):
     print(colored("Running on all trajs with modality keys:", color='green'), args.modality_keys)
 
     all_mse = []
-    for traj_id in range(args.trajs):
-        print("Running trajectory:", traj_id)
+    for traj_id in trajs[:args.trajs]:
+        print(colored("Running trajectory:", color='blue'), traj_id)
         mse = calc_mse_for_single_trajectory(
             policy,
             dataset,
@@ -150,7 +157,7 @@ def main(args: ArgsConfig):
             action_horizon=args.action_horizon,
             plot=args.plot,
         )
-        print("MSE:", mse)
+        print(colored("MSE:", color='blue'), mse)
         all_mse.append(mse)
     print("Average MSE across all trajs:", np.mean(all_mse))
     print("Done")

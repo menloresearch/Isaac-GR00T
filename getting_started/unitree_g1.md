@@ -153,19 +153,34 @@ Assuming a 10 Hz inference frequency, 160 steps correspond to 1 seconds of actio
 
 CLI commands for debug finetuen process:
 
+Preparing dataset
 ```
 huggingface-cli download unitreerobotics/G1_BlockStacking_Dataset \
   --repo-type dataset \
   --local-dir ./gr00t_dataset/G1_BlockStacking_Dataset
 
 cp getting_started/examples/unitree_g1_blocks_v2__modality.json ./gr00t_dataset/G1_BlockStacking_Dataset/meta
+```
 
+Train and eval the model. Since blockstacking have 300 episodes, we use first 270 in trianing and last 30 for eval.
+```
 python3 scripts/gr00t_finetune.py \
   --dataset-path ./gr00t_dataset/G1_BlockStacking_Dataset/ \
   --num-gpus 1 \
   --data_config g1_stack_block \
   --batch-size 1 \
+  --train_episode 270 \
   --grad_accum_steps 8
+
+
+python3 scripts/eval_policy.py \
+  --plot \
+  --model_path /tmp/gr00t/checkpoint-1000/ \
+  --dataset_path gr00t_dataset/G1_BlockStacking_Dataset/ \
+  --data_config g1_stack_block \
+  --embodiment_tag new_embodiment \
+  --modality_keys left_hand \
+  --eval_episode_slice 30
 ```
 
 ---

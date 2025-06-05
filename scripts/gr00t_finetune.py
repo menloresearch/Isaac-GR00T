@@ -124,6 +124,9 @@ class ArgsConfig:
     # Mixture dataset parameters
     balance_trajectory_weights: bool = True
     """Used in LeRobotMixtureDataset. If True, sample trajectories within a dataset weighted by their length; otherwise, equal weighting."""
+    
+    train_episode: int | None = None
+    """Number of episodes will be use in the training, will take the first `train_episode` from the dataset"""
 
 
 #####################################################################################
@@ -140,6 +143,7 @@ def main(config: ArgsConfig):
     data_config_cls = DATA_CONFIG_MAP[config.data_config]
     modality_configs = data_config_cls.modality_config()
     transforms = data_config_cls.transform()
+    episode_slice = slice(config.train_episode) if config.train_episode else None
 
     # 1.2 data loader: we will use either single dataset or mixture dataset
     if len(config.dataset_path) == 1:
