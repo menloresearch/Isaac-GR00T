@@ -12,9 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import random
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, List
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
@@ -141,4 +141,14 @@ class InsertFixValue(ModalityTransform):
 
     def apply(self, data: dict[str, Any]) -> dict[str, Any]:
         data[self.key] = self.anno_str
+        return data
+
+
+class InsertValFromSet(ModalityTransform):
+
+    key: str =  Field()
+    anno_list: List[Any] =  Field()
+
+    def apply(self, data: dict[str, Any]) -> dict[str, Any]:
+        data[self.key] = random.choice(self.anno_list)
         return data
