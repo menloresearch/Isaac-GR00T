@@ -112,11 +112,16 @@ def calc_mse_for_single_trajectory(
                     ax.plot(j, gt_action_joints_across_time[j, i], "ro", label="inference point")
                 else:
                     ax.plot(j, gt_action_joints_across_time[j, i], "ro")
+            
+            # for j in range(0, steps):
+            #     if j % action_horizon:
+            #         ax.plot(j, gt_action_joints_across_time[j, i], "bo")
 
             ax.set_title(f"Joint {i}")
             ax.legend()
 
         plt.tight_layout()
+        plt.savefig('plot.jpg', format='jpg', dpi=300)
         plt.show()
 
     return mse
