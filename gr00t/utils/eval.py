@@ -124,6 +124,7 @@ def calc_mse_for_single_trajectory(
             ax.legend()
 
         plt.tight_layout()
+        plt.savefig('plot.jpg', format='jpg', dpi=300)
         plt.show()
 
     return mse
