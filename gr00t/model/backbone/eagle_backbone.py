@@ -14,9 +14,10 @@
 # limitations under the License.
 
 import os
+from typing import Dict
 
 import torch
-from torch import nn
+from torch import Tensor, nn
 from transformers import AutoConfig, AutoModel
 from transformers.feature_extraction_utils import BatchFeature
 
@@ -91,8 +92,10 @@ class EagleBackbone(nn.Module):
         remove_llm: bool = False,
         load_pretrained_det_eagle_path=None,
         use_local_eagle_hg_model: bool = True,
+        export_mode: bool = False,
     ):
         super().__init__()
+        self._export_mode = export_mode
         self.reproject_vision = reproject_vision
 
         # use local eagle model
@@ -100,6 +103,11 @@ class EagleBackbone(nn.Module):
             model_name = DEFAULT_EAGLE_MODEL_NAME
 
         config = AutoConfig.from_pretrained(model_name, trust_remote_code=True)
+        if self._export_mode:
+            config.vision_config._attn_implementation = 'eager'
+            config.llm_config._attn_implementation = 'eager'
+            # config._attn_implementation = 'eager'
+            # config.attn_implementation = 'eager'
         self.model = AutoModel.from_config(config, trust_remote_code=True)
         self.model.neftune_alpha = None
 
@@ -177,7 +185,13 @@ class EagleBackbone(nn.Module):
     def prepare_input(self, batch: dict) -> BatchFeature:
         return BatchFeature(data=batch)
 
-    def forward(self, vl_input: BatchFeature) -> BatchFeature:
+    def forward(self, *args) -> BatchFeature | torch.Tensor:
+        if not self._export_mode:
+            return self._forward(*args)
+        else:
+            return self._forward_onnx(*args)
+
+    def _forward(self, vl_input: BatchFeature) -> BatchFeature:
         # 0. Set frozen module to eval
         self.set_frozen_modules_to_eval_mode()
 
@@ -198,3 +212,19 @@ class EagleBackbone(nn.Module):
                 "backbone_attention_mask": attention_mask,
             }
         )  # [B, T2, hidden_size]
+    
+    def _forward_onnx(self, pixel_values, input_ids, attention_mask) -> torch.Tensor:
+        # 0. Set frozen module to eval
+        self.set_frozen_modules_to_eval_mode()
+        
+
+        embeddings = get_embeddings(
+            self.model,
+            self.reproject_vision,
+            pixel_values=pixel_values,
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+        )
+
+        embeddings = self.linear(embeddings)
+        return embeddings

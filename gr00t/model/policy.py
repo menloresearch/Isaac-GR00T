@@ -70,6 +70,7 @@ class Gr00tPolicy(BasePolicy):
         modality_transform: ComposedModalityTransform,
         denoising_steps: Optional[int] = None,
         device: Union[int, str] = "cuda" if torch.cuda.is_available() else "cpu",
+        export_mode: bool = False,
     ):
         """
         Initialize the Gr00tPolicy.
@@ -92,6 +93,7 @@ class Gr00tPolicy(BasePolicy):
                 f"Model not found or avail in the huggingface hub. Loading from local path: {model_path}"
             )
 
+        self._export_mode = export_mode
         self._modality_config = modality_config
         self._modality_transform = modality_transform
         self._modality_transform.eval()  # set this to eval mode
@@ -182,7 +184,9 @@ class Gr00tPolicy(BasePolicy):
     def _get_action_from_normalized_input(self, normalized_input: Dict[str, Any]) -> torch.Tensor:
         # Set up autocast context if needed
         with torch.inference_mode(), torch.autocast(device_type="cuda", dtype=COMPUTE_DTYPE):
+            # torch.cuda.memory._record_memory_history()
             model_pred = self.model.get_action(normalized_input)
+            # torch.cuda.memory._dump_snapshot('gr00t_inference-448.pickle')
 
         normalized_action = model_pred["action_pred"].float()
         return normalized_action
@@ -231,7 +235,11 @@ class Gr00tPolicy(BasePolicy):
         return True
 
     def _load_model(self, model_path):
-        model = GR00T_N1.from_pretrained(model_path, torch_dtype=COMPUTE_DTYPE)
+        model = GR00T_N1.from_pretrained(
+            model_path, 
+            torch_dtype=COMPUTE_DTYPE, 
+            export_mode=self._export_mode
+        )
         model.eval()  # Set model to eval mode
         model.to(device=self.device)  # type: ignore
 
