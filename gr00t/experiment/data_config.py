@@ -26,6 +26,7 @@ from gr00t.data.transform.state_action import (
 from gr00t.data.transform.base import (
     InsertFixValue,
     InsertValFromSet,
+    DuplicateStateAsAction,
 )
 from gr00t.data.transform.video import (
     VideoColorJitter,
@@ -159,6 +160,54 @@ class G1StackBlocksDataConfig(BaseDataConfig):
             #     apply_to=[]
             # ),
             # model-specific transform
+            GR00TTransform(
+                state_horizon=len(self.observation_indices),
+                action_horizon=len(self.action_indices),
+                max_state_dim=64,
+                max_action_dim=32,
+            ),
+        ]
+        return ComposedModalityTransform(transforms=transforms)
+
+
+class G1StackBlocksInference(G1StackBlocksDataConfig):
+
+    def transform(self) -> ModalityTransform:
+        """
+        HACK:
+        if input data is missing action fields, `StateActionTransform(apply_to=self.action_keys)` will complain about it.
+        buf if we remove the `StateActionTransform`, we can't unapply_transforms the model's prediction back to unnomralized state.
+        so we have to use `DuplicateStateAsAction` to insert a placeholder.
+        """
+        transforms = [
+            DuplicateStateAsAction(apply_to=[]),
+            
+            # video transforms
+            VideoToTensor(apply_to=self.video_keys),
+            VideoCrop(apply_to=self.video_keys, scale=0.95),
+            VideoResize(apply_to=self.video_keys, height=224, width=224, interpolation="linear"),
+            VideoToNumpy(apply_to=self.video_keys),
+            # state transforms
+            StateActionToTensor(apply_to=self.state_keys),
+            StateActionSinCosTransform(apply_to=self.state_keys),
+
+            StateActionToTensor(apply_to=self.action_keys),
+            StateActionTransform(
+                apply_to=self.action_keys,
+                normalization_modes={key: "min_max" for key in self.action_keys},
+            ),
+            
+            # concat transforms
+            ConcatTransform(
+                video_concat_order=self.video_keys,
+                state_concat_order=self.state_keys,
+                action_concat_order=self.action_keys,
+            ),
+            InsertValFromSet(
+                key=self.language_keys[0], 
+                anno_list=[[ins] for ins in self.instruction_list],
+                apply_to=[]
+            ),
             GR00TTransform(
                 state_horizon=len(self.observation_indices),
                 action_horizon=len(self.action_indices),
@@ -806,4 +855,5 @@ DATA_CONFIG_MAP = {
     "single_panda_gripper": SinglePandaGripperDataConfig(),
     "so100": So100DataConfig(),
     "g1_stack_block": G1StackBlocksDataConfig(),
+    "g1_stack_block_inference": G1StackBlocksInference(),
 }

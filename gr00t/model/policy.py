@@ -168,7 +168,9 @@ class Gr00tPolicy(BasePolicy):
         if not is_batch:
             observations = unsqueeze_dict_values(observations)
 
-        normalized_input = unsqueeze_dict_values
+        # normalized_input = unsqueeze_dict_values
+        # rm = [k for k in observations if k.startswith("action.")]
+        # for k in rm: del observations[k]
         # Apply transforms
         normalized_input = self.apply_transforms(observations)
 
