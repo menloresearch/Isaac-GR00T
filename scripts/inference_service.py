@@ -118,6 +118,10 @@ if __name__ == "__main__":
                 "annotation.human.action.task_description": ["do your thing!"],
             }
         else:
+            """
+            python3 scripts/inference_service.py --server --data_config g1_stack_block_inference --embodiment_tag new_embodiment --model_path ~/Downloads/GR00T/checkpoint/
+            python3 scripts/inference_service.py --client --data_config g1_stack_block --embodiment_tag new_embodiment
+            """
             obs = {
                 "video.ego_view": np.random.randint(0, 256, (1, 480, 640, 3), dtype=np.uint8),
                 "state.left_shoulder": np.random.rand(1, 3),
