@@ -152,3 +152,14 @@ class InsertValFromSet(ModalityTransform):
     def apply(self, data: dict[str, Any]) -> dict[str, Any]:
         data[self.key] = random.choice(self.anno_list)
         return data
+
+
+class DuplicateStateAsAction(ModalityTransform):
+
+    def apply(self, data: dict[str, Any]) -> dict[str, Any]:
+        for k in list(data.keys()):
+            if k.startswith('state.'):
+                ak = k.replace('state.', 'action.')
+                if ak not in data:
+                    data[ak] = data[k]
+        return data
