@@ -161,7 +161,8 @@ if __name__ == "__main__":
         print('Keys: ', action.keys())
 
         for key, value in action.items():
-            print(f"Action: {key}: {value.shape}")
+            print(f"Action: {key}: {value.shape}, {value.dtype}")
+            print(value)
 
     else:
         raise ValueError("Please specify either --server or --client")
