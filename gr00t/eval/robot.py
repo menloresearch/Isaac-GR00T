@@ -15,6 +15,7 @@
 
 from typing import Any, Dict
 
+import numpy as np
 from gr00t.data.dataset import ModalityConfig
 from gr00t.eval.service import BaseInferenceClient, BaseInferenceServer
 from gr00t.model.policy import BasePolicy
@@ -68,9 +69,14 @@ class DummyInferenceServer(BaseInferenceServer):
     def init_cache(self):
         self.step = 0
         self.act_chunks = []
-        for i in range(0, 16*30, 16):
+        for i in range(0, 16*60, 16):
             data = self.dataset.get_step_data(0, i)
-            action = {k: v for k, v in data.items() if k.startswith('action.')}
+            action = {}
+            for k, v in data.items():
+                if k.startswith('action.'):
+                    if v.ndim == 2 and v.shape[-1] == 1:
+                        v = np.squeeze(v, -1)
+                    action[k] = v
             # breakpoint()
             self.act_chunks.append(action)
     
