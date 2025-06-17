@@ -48,3 +48,38 @@ class RobotInferenceClient(BaseInferenceClient, BasePolicy):
 
     def get_modality_config(self) -> Dict[str, ModalityConfig]:
         return self.call_endpoint("get_modality_config", requires_input=False)
+
+
+class DummyInferenceServer(BaseInferenceServer):
+    """
+    Server output dataset label as action
+    """
+
+    def __init__(self, model, dataset, host: str = "*", port: int = 5555):
+        super().__init__(host, port)
+        self.model = model
+        self.dataset = dataset
+        self.init_cache()
+        self.register_endpoint("get_action", self.get_action)
+        self.register_endpoint(
+            "get_modality_config", model.get_modality_config, requires_input=False
+        )
+    
+    def init_cache(self):
+        self.step = 0
+        self.act_chunks = []
+        for i in range(0, 16*30, 16):
+            data = self.dataset.get_step_data(0, i)
+            action = {k: v for k, v in data.items() if k.startswith('action.')}
+            # breakpoint()
+            self.act_chunks.append(action)
+    
+    def get_action(self, *args):
+        action = self.act_chunks[self.step % len(self.act_chunks)]
+        self.step += 1
+        return action
+
+    @staticmethod
+    def start_server(policy: BasePolicy, port: int):
+        server = RobotInferenceServer(policy, port=port)
+        server.run()
