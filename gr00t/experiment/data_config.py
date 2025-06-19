@@ -136,7 +136,10 @@ class G1StackBlocksDataConfig(BaseDataConfig):
             VideoToNumpy(apply_to=self.video_keys),
             # state transforms
             StateActionToTensor(apply_to=self.state_keys),
-            StateActionSinCosTransform(apply_to=self.state_keys),
+            StateActionTransform(
+                apply_to=self.state_keys,
+                normalization_modes={key: "min_max" for key in self.state_keys},
+            ),
             # action transforms
             StateActionToTensor(apply_to=self.action_keys),
             StateActionTransform(
@@ -149,16 +152,16 @@ class G1StackBlocksDataConfig(BaseDataConfig):
                 state_concat_order=self.state_keys,
                 action_concat_order=self.action_keys,
             ),
-            InsertValFromSet(
-                key=self.language_keys[0], 
-                anno_list=[[ins] for ins in self.instruction_list],
-                apply_to=[]
-            ),
-            # InsertFixValue(
+            # InsertValFromSet(
             #     key=self.language_keys[0], 
-            #     anno_str=[self.instruction], 
+            #     anno_list=[[ins] for ins in self.instruction_list],
             #     apply_to=[]
             # ),
+            InsertFixValue(
+                key=self.language_keys[0], 
+                anno_str=[self.instruction_list[0]], 
+                apply_to=[]
+            ),
             # model-specific transform
             GR00TTransform(
                 state_horizon=len(self.observation_indices),
@@ -189,8 +192,11 @@ class G1StackBlocksInference(G1StackBlocksDataConfig):
             VideoToNumpy(apply_to=self.video_keys),
             # state transforms
             StateActionToTensor(apply_to=self.state_keys),
-            StateActionSinCosTransform(apply_to=self.state_keys),
-
+            StateActionTransform(
+                apply_to=self.state_keys,
+                normalization_modes={key: "min_max" for key in self.state_keys},
+            ),
+            # action transforms
             StateActionToTensor(apply_to=self.action_keys),
             StateActionTransform(
                 apply_to=self.action_keys,
@@ -203,9 +209,14 @@ class G1StackBlocksInference(G1StackBlocksDataConfig):
                 state_concat_order=self.state_keys,
                 action_concat_order=self.action_keys,
             ),
-            InsertValFromSet(
+            # InsertValFromSet(
+            #     key=self.language_keys[0], 
+            #     anno_list=[[ins] for ins in self.instruction_list[:1]],
+            #     apply_to=[]
+            # ),
+            InsertFixValue(
                 key=self.language_keys[0], 
-                anno_list=[[ins] for ins in self.instruction_list],
+                anno_str=[self.instruction_list[-1]], 
                 apply_to=[]
             ),
             GR00TTransform(
