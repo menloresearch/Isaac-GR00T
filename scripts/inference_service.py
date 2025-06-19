@@ -52,6 +52,9 @@ class ArgsConfig:
 
     denoising_steps: int = 4
     """The number of denoising steps to use."""
+    
+    debug_mode: bool = False
+    """Enable rerun logger inside the inference server"""
 
 
 #####################################################################################
@@ -83,7 +86,7 @@ def main(args: ArgsConfig):
         )
 
         # Start the server
-        server = RobotInferenceServer(policy, port=args.port)
+        server = RobotInferenceServer(policy, port=args.port, debug=args.debug_mode)
         server.run()
 
     elif args.client:
