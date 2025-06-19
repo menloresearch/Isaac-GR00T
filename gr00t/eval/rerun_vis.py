@@ -58,7 +58,8 @@ class InferenceLogger:
 
     def __init__(self, name="rerun_gr00t_n1.5_inference_request"):
         self.timeline = 'request_t'
-        self.step = 0
+        self._step_size = 16
+        self.step = -self._step_size
         rr.init(
             name, 
             default_blueprint=None, 
@@ -68,37 +69,76 @@ class InferenceLogger:
         rr.set_time(self.timeline, timestamp=0)
     
     def build_blueprint(self):
-        right_panels = [
+        st_right_panels = [
             "state.left_shoulder",
             "state.right_shoulder",
             "state.left_elbow",
             "state.right_elbow",
         ]
-        left_panels = [
+        st_left_panels = [
             "state.left_wrist",
             "state.right_wrist",
             "state.left_hand",
             "state.right_hand",
         ]
+        act_right_panels = [
+            "action.left_shoulder",
+            "action.right_shoulder",
+            "action.left_elbow",
+            "action.right_elbow",
+        ]
+        act_left_panels = [
+            "action.left_wrist",
+            "action.right_wrist",
+            "action.left_hand",
+            "action.right_hand",
+        ]
+        
         blueprint = rrb.Horizontal(
-            rrb.Vertical(
-                *[
-                    rrb.TimeSeriesView(
-                        origin=name.replace('.', '/'),
-                        name=name,
-                    )
-                    for name in left_panels
-                ]
-            ),
-            rrb.Vertical(
-                rrb.Spatial2DView(origin="video/ego_view"),
-                *[
-                    rrb.TimeSeriesView(
-                        origin=name.replace('.', '/'),
-                        name=name,
-                    )
-                    for name in right_panels
-                ]
+            rrb.Tabs(
+                rrb.Horizontal(
+                    rrb.Vertical(
+                        *[
+                            rrb.TimeSeriesView(
+                                origin=name.replace('.', '/'),
+                                name=name,
+                            )
+                            for name in st_left_panels
+                        ]
+                    ),
+                    rrb.Vertical(
+                        rrb.Spatial2DView(origin="video/ego_view"),
+                        *[
+                            rrb.TimeSeriesView(
+                                origin=name.replace('.', '/'),
+                                name=name,
+                            )
+                            for name in st_right_panels
+                        ]
+                    ),
+                    name='state_panel',
+                ),
+                rrb.Horizontal(
+                    rrb.Vertical(
+                        *[
+                            rrb.TimeSeriesView(
+                                origin=name.replace('.', '/'),
+                                name=name,
+                            )
+                            for name in act_left_panels
+                        ]
+                    ),
+                    rrb.Vertical(
+                        *[
+                            rrb.TimeSeriesView(
+                                origin=name.replace('.', '/'),
+                                name=name,
+                            )
+                            for name in act_right_panels
+                        ]
+                    ),
+                    name='action_panel',
+                ),
             ),
             # rrb.Spatial3DView(origin="/", name="World position"),
             column_shares=[0.60, 0.40],
@@ -135,15 +175,23 @@ class InferenceLogger:
             assert step > self.step
             self.step = step
         else:
-            self.step += 1
+            self.step += self._step_size
         
         print('rerun log', observation.keys())
         rr.set_time(self.timeline, timestamp=self.step)
+        times = rr.TimeColumn(self.timeline, timestamp=list(range(self.step, self.step + self._step_size)))
         for k, v in observation.items():
             if 'video.' in k:
                 rr.log(
                     k.replace('.', '/'), 
                     rr.Image(image=np.squeeze(v, axis=0), color_model=rr.ColorModel.RGB).compress(),
+                )
+            elif k.startswith('action.'):
+                # rr.log(k.replace('.', '/'), rr.Scalars(np.squeeze(v, axis=0)))
+                rr.send_columns(
+                    k.replace('.', '/'), 
+                    indexes=[times], 
+                    columns=rr.Scalars.columns(scalars=v)
                 )
             else:
                 rr.log(k.replace('.', '/'), rr.Scalars(np.squeeze(v, axis=0)))
@@ -163,13 +211,13 @@ if __name__ == "__main__":
             "state.left_hand": np.random.rand(1, 7),
             "state.right_hand": np.random.rand(1, 7),
             
-            # "action.left_shoulder": np.random.rand(1, 3),
-            # "action.right_shoulder": np.random.rand(1, 3),
-            # "action.left_elbow": np.random.rand(1, 1),
-            # "action.right_elbow": np.random.rand(1, 1),
-            # "action.left_wrist": np.random.rand(1, 3),
-            # "action.right_wrist": np.random.rand(1, 3),
-            # "action.left_hand": np.random.rand(1, 7),
-            # "action.right_hand": np.random.rand(1, 7),
+            "action.left_shoulder": np.random.rand(16, 3),
+            "action.right_shoulder": np.random.rand(16, 3),
+            "action.left_elbow": np.random.rand(16, 1),
+            "action.right_elbow": np.random.rand(16, 1),
+            "action.left_wrist": np.random.rand(16, 3),
+            "action.right_wrist": np.random.rand(16, 3),
+            "action.left_hand": np.random.rand(16, 7),
+            "action.right_hand": np.random.rand(16, 7),
         }
         logger.log(obs)

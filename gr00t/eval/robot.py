@@ -42,9 +42,12 @@ class RobotInferenceServer(BaseInferenceServer):
         )
     
     def get_action(self, obs):
+        actions = self.model.get_action(obs)
+        print(actions)
         if self.debug:
+            obs.update(actions)
             self.rerun_logger.log(obs)
-        return self.model.get_action(obs)
+        return actions
 
     @staticmethod
     def start_server(policy: BasePolicy, port: int):
